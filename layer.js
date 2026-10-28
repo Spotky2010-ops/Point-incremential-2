@@ -1,3 +1,15 @@
+function getPrestigeMilestoneMult() {
+    let mult = new Decimal(1)
+
+    if (player.p.points.gte(1)) mult = mult.times(2)
+    if (player.p.points.gte(10)) mult = mult.times(2)
+    if (player.p.points.gte(25)) mult = mult.times(3)
+    if (player.p.points.gte(50)) mult = mult.times(3)
+    if (player.p.points.gte(100)) mult = mult.times(5)
+
+    return mult
+}
+
 addLayer("p", {
     name: "The Point Tree",
     symbol: "L",
@@ -7,16 +19,17 @@ addLayer("p", {
         points: new Decimal(0),
         autoPrestige: false,
         buyAll: false,
+        autoPrestigeTarget: new Decimal(10),
     }},
     color: "#4BDC13",
     requires: new Decimal(10),
     resource: "prestige points",
     baseResource: "points",
-    baseAmount() {return player.points},
+    baseAmount() { return player.points },
     type: "normal",
     exponent: 0.5,
     gainMult() {
-        let mult = new Decimal(1)
+        let mult = getPrestigeMilestoneMult()
 
         if (hasUpgrade("p", 11)) mult = mult.times(2)
         if (hasUpgrade("p", 12)) mult = mult.times(2)
@@ -34,15 +47,30 @@ addLayer("p", {
     gainExp() { return new Decimal(1) },
     row: 0,
     hotkeys: [
-        {key: "p", description: "Reset for Layer 1", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {key: "p", description: "Reset for Layer 1", onPress(){ if (canReset(this.layer)) doReset(this.layer) }},
     ],
-    layerShown(){return true},
+    layerShown() { return true },
     update(diff) {
-        if (player[this.layer].autoPrestige && canReset(this.layer)) doReset(this.layer)
+        if (player[this.layer].autoPrestige && player.points.gte(player[this.layer].autoPrestigeTarget)) {
+            doReset(this.layer)
+        }
 
         if (player[this.layer].buyAll) {
+            const costMap = {
+                11: new Decimal(1),
+                12: new Decimal(3),
+                13: new Decimal(8),
+                14: new Decimal(18),
+                15: new Decimal(40),
+                16: new Decimal(90),
+                17: new Decimal(200),
+                18: new Decimal(440),
+                19: new Decimal(960),
+                20: new Decimal(2100),
+            }
+
             for (let i = 11; i <= 20; i++) {
-                if (!hasUpgrade(this.layer, i) && canAffordUpgrade(this.layer, i)) {
+                if (!hasUpgrade(this.layer, i) && player[this.layer].points.gte(costMap[i])) {
                     buyUpgrade(this.layer, i)
                 }
             }
@@ -53,9 +81,7 @@ addLayer("p", {
         "prestige-button",
         "blank",
         ["display-text", function() {
-            const total = Object.keys(player.p.achievements || {}).length
-            const max = 5
-            return `Achievements: ${total}/${max}`
+            return `Auto prestige: ${player.p.autoPrestige ? "ON" : "OFF"} | Target: ${format(player.p.autoPrestigeTarget)} | Buy All: ${player.p.buyAll ? "ON" : "OFF"}`
         }],
         "blank",
         "achievements",
@@ -66,22 +92,55 @@ addLayer("p", {
     ],
     clickables: {
         11: {
-            display() {
-                return player.p.buyAll ? "Buy All: ON" : "Buy All: OFF"
-            },
-            onClick() {
-                player.p.buyAll = !player.p.buyAll
-            },
+            display() { return player.p.buyAll ? "Buy All: ON" : "Buy All: OFF" },
+            onClick() { player.p.buyAll = !player.p.buyAll },
             canClick() { return true },
         },
         12: {
-            display() {
-                return player.p.autoPrestige ? "Auto Prestige: ON" : "Auto Prestige: OFF"
-            },
+            display() { return player.p.autoPrestige ? "Auto Prestige: ON" : "Auto Prestige: OFF" },
+            onClick() { player.p.autoPrestige = !player.p.autoPrestige },
+            canClick() { return true },
+        },
+        13: {
+            display() { return "Increase Target" },
             onClick() {
-                player.p.autoPrestige = !player.p.autoPrestige
+                player.p.autoPrestigeTarget = player.p.autoPrestigeTarget.times(2).max(new Decimal(10))
             },
             canClick() { return true },
+        },
+        14: {
+            display() { return "Decrease Target" },
+            onClick() {
+                player.p.autoPrestigeTarget = player.p.autoPrestigeTarget.div(2).max(new Decimal(10))
+            },
+            canClick() { return true },
+        },
+    },
+    milestones: {
+        1: {
+            requirementDescription: "1 prestige point",
+            effectDescription: "x2 point gain",
+            done() { return player.p.points.gte(1) },
+        },
+        2: {
+            requirementDescription: "10 prestige points",
+            effectDescription: "x4 total point gain",
+            done() { return player.p.points.gte(10) },
+        },
+        3: {
+            requirementDescription: "25 prestige points",
+            effectDescription: "x12 total point gain",
+            done() { return player.p.points.gte(25) },
+        },
+        4: {
+            requirementDescription: "50 prestige points",
+            effectDescription: "x36 total point gain",
+            done() { return player.p.points.gte(50) },
+        },
+        5: {
+            requirementDescription: "100 prestige points",
+            effectDescription: "x180 total point gain",
+            done() { return player.p.points.gte(100) },
         },
     },
     upgrades: {
@@ -100,49 +159,49 @@ addLayer("p", {
         13: {
             title: "Point Booster III",
             description: "Double point gain once more.",
-            cost: new Decimal(6),
+            cost: new Decimal(8),
             effect() { return new Decimal(2) },
         },
         14: {
             title: "Point Booster IV",
             description: "More efficiency for point gains.",
-            cost: new Decimal(12),
+            cost: new Decimal(18),
             effect() { return new Decimal(2) },
         },
         15: {
             title: "Point Booster V",
             description: "Boost point generation further.",
-            cost: new Decimal(24),
+            cost: new Decimal(40),
             effect() { return new Decimal(2) },
         },
         16: {
             title: "Point Booster VI",
             description: "A stronger multiplier for points.",
-            cost: new Decimal(48),
+            cost: new Decimal(90),
             effect() { return new Decimal(2) },
         },
         17: {
             title: "Point Booster VII",
             description: "A serious points production boost.",
-            cost: new Decimal(96),
+            cost: new Decimal(200),
             effect() { return new Decimal(2) },
         },
         18: {
             title: "Point Booster VIII",
             description: "Point generation is now greatly amplified.",
-            cost: new Decimal(192),
+            cost: new Decimal(440),
             effect() { return new Decimal(2) },
         },
         19: {
             title: "Point Booster IX",
             description: "Keep pushing toward an efficient economy.",
-            cost: new Decimal(384),
+            cost: new Decimal(960),
             effect() { return new Decimal(2) },
         },
         20: {
             title: "Point Booster X",
             description: "Triple all point gains from boosters.",
-            cost: new Decimal(768),
+            cost: new Decimal(2100),
             effect() { return new Decimal(3) },
         },
     },
