@@ -41,6 +41,11 @@ addLayer("p", {
         if (hasUpgrade("p", 18)) mult = mult.times(2)
         if (hasUpgrade("p", 19)) mult = mult.times(2)
         if (hasUpgrade("p", 20)) mult = mult.times(3)
+        if (hasUpgrade("p", 21)) mult = mult.times(2)
+        if (hasUpgrade("p", 22)) mult = mult.times(2)
+        if (hasUpgrade("p", 23)) mult = mult.times(3)
+        if (hasUpgrade("p", 24)) mult = mult.times(2)
+        if (hasUpgrade("p", 25)) mult = mult.times(5)
 
         return mult
     },
@@ -67,9 +72,14 @@ addLayer("p", {
                 18: new Decimal(440),
                 19: new Decimal(960),
                 20: new Decimal(2100),
+                21: new Decimal(4200),
+                22: new Decimal(9000),
+                23: new Decimal(18000),
+                24: new Decimal(36000),
+                25: new Decimal(72000),
             }
 
-            for (let i = 11; i <= 20; i++) {
+            for (let i = 11; i <= 25; i++) {
                 if (!hasUpgrade(this.layer, i) && player[this.layer].points.gte(costMap[i])) {
                     buyUpgrade(this.layer, i)
                 }
@@ -203,6 +213,36 @@ addLayer("p", {
             description: "Triple all point gains from boosters.",
             cost: new Decimal(2100),
             effect() { return new Decimal(3) },
+        },
+        21: {
+            title: "Prestige Upgrade I",
+            description: "Double prestige gains and all point scaling.",
+            cost: new Decimal(4200),
+            effect() { return new Decimal(2) },
+        },
+        22: {
+            title: "Prestige Upgrade II",
+            description: "Add a powerful amplifier to all prestige rewards.",
+            cost: new Decimal(9000),
+            effect() { return new Decimal(2) },
+        },
+        23: {
+            title: "Prestige Upgrade III",
+            description: "Triple the effect of prestige growth.",
+            cost: new Decimal(18000),
+            effect() { return new Decimal(3) },
+        },
+        24: {
+            title: "Prestige Upgrade IV",
+            description: "Furthers the multiplier behind prestige power.",
+            cost: new Decimal(36000),
+            effect() { return new Decimal(2) },
+        },
+        25: {
+            title: "Prestige Upgrade V",
+            description: "Massively boosts prestige efficiency and late-game grind.",
+            cost: new Decimal(72000),
+            effect() { return new Decimal(5) },
         },
     },
     achievements: {
